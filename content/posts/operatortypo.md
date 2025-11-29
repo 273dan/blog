@@ -2,12 +2,10 @@
 title = "Do as I meant, not as I wrote"
 date = "2025-11-23T19:01:37Z"
 #dateFormat = "2006-01-02" # This value can be configured for per-post date formatting
-author = ""
-authorTwitter = "" #do not include @
 cover = ""
-tags = ["", ""]
+tags = ["C++"]
 keywords = ["", ""]
-description = ""
+description = "How a single-character typo corrupted a trading engine with no compiler errors... "
 showFullContent = false
 readingTime = false
 hideComments = false
@@ -108,7 +106,7 @@ setb   r9b
 or     r9b, r10b
 je     .LBB1_5
 ```
-Clang is **checking if the vectors overlap at runtime**. It wants to use 32-byte wide AVX registers to perform the sum, but if the vectors overlap, writing to the destination might overwrite data the source hasn't read yet. The magic number `128` indicates that the compiler wants to unroll the loop 4 times (8 bytes per double x 4 doubles per register x **4 unrolls** = 128). The `sub` instruction calculates the distance between vector `a` and result. If the distance is less than `128`, it sets the `r9b` flag - indicating that `a` and `result` overlap. If the flag is set, it falls through to `.LBB1_2`, full of slower - but safer - scalar instructions (`vaddsd`,`vmovsd`).
+Clang is **checking if the vectors overlap at runtime**. It wants to use 32-byte wide AVX registers to perform the sum, but if the vectors overlap, writing to the destination might overwrite data the source hasn't read yet. The seemingly magic number `128` actually indicates that the compiler wants to unroll the loop 4 times (8 bytes per double x 4 doubles per register x **4 unrolls** = 128). The `sub` instruction calculates the distance between vector `a` and result. If the distance is less than `128`, it sets the `r9b` flag - indicating that `a` and `result` overlap. If the flag is set, it falls through to `.LBB1_2`, full of slower - but safer - scalar instructions (`vaddsd`,`vmovsd`).
 
 However, if the flag is **not** set, we see beautiful SIMD logic. Look at `.LBB1_8`, full of "packed double" SIMD instructions on 32-byte `ymm` registers. `SimpleVecSum` is prehistoric in comparison - all enabled because of proxy types, and ultimately, the freedom of operator overloading.
 #### Embedded DSLs

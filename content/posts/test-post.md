@@ -1,7 +1,7 @@
 +++
-draft = true
 title = "Test Post"
 date = "2025-11-23T18:26:49Z"
+draft = true
 #dateFormat = "2006-01-02" # This value can be configured for per-post date formatting
 author = "Daniel Kirby"
 authorTwitter = "" #do not include @

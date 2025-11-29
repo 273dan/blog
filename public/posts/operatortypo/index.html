@@ -6,9 +6,7 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="The world&rsquo;s worst copy assignment I recently experienced a bug so nasty it made me reconsider my proclaimed &ldquo;passion&rdquo; for C&#43;&#43;. Working on an implementation of a limit orderbook, I had implemented a cancel method, simply removing an Order object from a std::vector using erase.
-// ... auto it = _orders_by_id[order_id]; orders.erase(it); // Note: This is a &#34;Naive Vector&#34; implementation for a future project // comparing orderbook architectures // Iterator invalidation is part of that analysis! // ... But, the Order was never removed. In fact, regardless of which order_id I was attempting to remove, it would remove only the last order. After stepping through the function in gdb more times than I care to admit, I checked my implementation of the Order class - and found this abomination.
-" />
+<meta name="description" content="How a single-character typo corrupted a trading engine with no compiler errors... " />
 <meta name="keywords" content=", " />
 
   <meta name="robots" content="noodp" />
@@ -80,9 +78,7 @@
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Do as I meant, not as I wrote">
-<meta property="og:description" content="The world&rsquo;s worst copy assignment I recently experienced a bug so nasty it made me reconsider my proclaimed &ldquo;passion&rdquo; for C&#43;&#43;. Working on an implementation of a limit orderbook, I had implemented a cancel method, simply removing an Order object from a std::vector using erase.
-// ... auto it = _orders_by_id[order_id]; orders.erase(it); // Note: This is a &#34;Naive Vector&#34; implementation for a future project // comparing orderbook architectures // Iterator invalidation is part of that analysis! // ... But, the Order was never removed. In fact, regardless of which order_id I was attempting to remove, it would remove only the last order. After stepping through the function in gdb more times than I care to admit, I checked my implementation of the Order class - and found this abomination.
-" />
+<meta property="og:description" content="How a single-character typo corrupted a trading engine with no compiler errors... " />
 <meta property="og:url" content="http://localhost:1313/blog/posts/operatortypo/" />
 <meta property="og:site_name" content="Terminal" />
 
@@ -116,7 +112,7 @@
   <header class="header">
   <div class="header__inner">
     <div class="header__logo">
-      <a href="/blog">
+      <a href="/blog/about">
   <div class="logo">
     Dan Kirby
   </div>
@@ -124,8 +120,53 @@
 
     </div>
     
+      <ul class="menu menu--mobile">
+  <li class="menu__trigger">Menu&nbsp;▾</li>
+  <li>
+    <ul class="menu__dropdown">
+      
+        
+          <li><a href="/blog/about">About</a></li>
+        
+      
+        
+          <li><a href="/blog/tags/c&#43;&#43;">C&#43;&#43;</a></li>
+        
+      
+        
+          <li><a href="/blog/daniel_kirby_cv_public.pdf">CV</a></li>
+        
+      
+      
+    </ul>
+  </li>
+</ul>
+
+    
     
   </div>
+  
+    <nav class="navigation-menu">
+  <ul class="navigation-menu__inner menu--desktop">
+    
+      
+        
+          <li><a href="/blog/about" >About</a></li>
+        
+      
+        
+          <li><a href="/blog/tags/c&#43;&#43;" >C&#43;&#43;</a></li>
+        
+      
+        
+          <li><a href="/blog/daniel_kirby_cv_public.pdf" >CV</a></li>
+        
+      
+      
+    
+  </ul>
+</nav>
+
   
 </header>
 
@@ -136,14 +177,12 @@
   <h1 class="post-title">
     <a href="http://localhost:1313/blog/posts/operatortypo/">Do as I meant, not as I wrote</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2025-11-23&nbsp;[Updated:  2025-11-23]</time></div>
+  <div class="post-meta"><time class="post-date">2025-11-23</time></div>
 
   
     <span class="post-tags">
       
-      #<a href="http://localhost:1313/blog/tags/"></a>&nbsp;
-      
-      #<a href="http://localhost:1313/blog/tags/"></a>&nbsp;
+      #<a href="http://localhost:1313/blog/tags/c&#43;&#43;/">C&#43;&#43;</a>&nbsp;
       
     </span>
   
@@ -228,7 +267,7 @@
 </span></span><span class="line"><span class="cl"><span class="c1">; ... repeats for vectors b and c ...
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">or</span>     <span class="no">r9b</span><span class="p">,</span> <span class="no">r10b</span>
 </span></span><span class="line"><span class="cl"><span class="nf">je</span>     <span class="no">.LBB1_5</span>
-</span></span></code></pre></div><p>Clang is <strong>checking if the vectors overlap at runtime</strong>. It wants to use 32-byte wide AVX registers to perform the sum, but if the vectors overlap, writing to the destination might overwrite data the source hasn&rsquo;t read yet. The magic number <code>128</code> indicates that the compiler wants to unroll the loop 4 times (8 bytes per double x 4 doubles per register x <strong>4 unrolls</strong> = 128). The <code>sub</code> instruction calculates the distance between vector <code>a</code> and result. If the distance is less than <code>128</code>, it sets the <code>r9b</code> flag - indicating that <code>a</code> and <code>result</code> overlap. If the flag is set, it falls through to <code>.LBB1_2</code>, full of slower - but safer - scalar instructions (<code>vaddsd</code>,<code>vmovsd</code>).</p>
+</span></span></code></pre></div><p>Clang is <strong>checking if the vectors overlap at runtime</strong>. It wants to use 32-byte wide AVX registers to perform the sum, but if the vectors overlap, writing to the destination might overwrite data the source hasn&rsquo;t read yet. The seemingly magic number <code>128</code> actually indicates that the compiler wants to unroll the loop 4 times (8 bytes per double x 4 doubles per register x <strong>4 unrolls</strong> = 128). The <code>sub</code> instruction calculates the distance between vector <code>a</code> and result. If the distance is less than <code>128</code>, it sets the <code>r9b</code> flag - indicating that <code>a</code> and <code>result</code> overlap. If the flag is set, it falls through to <code>.LBB1_2</code>, full of slower - but safer - scalar instructions (<code>vaddsd</code>,<code>vmovsd</code>).</p>
 <p>However, if the flag is <strong>not</strong> set, we see beautiful SIMD logic. Look at <code>.LBB1_8</code>, full of &ldquo;packed double&rdquo; SIMD instructions on 32-byte <code>ymm</code> registers. <code>SimpleVecSum</code> is prehistoric in comparison - all enabled because of proxy types, and ultimately, the freedom of operator overloading.</p>
 <h4 id="embedded-dsls">Embedded DSLs<a href="#embedded-dsls" class="hanchor" ariaLabel="Anchor">#</a> </h4>
 <p>What if we wanted to completely redefine the role of <code>operator+</code> and <code>operator=</code>. In not all cases does <code>=</code> mean assignment. Take a <strong>constrained optimisation solver</strong> for example. Naturally, you may want to define a constraint. In a rigid world, this may look like as follows:</p>
@@ -257,22 +296,6 @@
 
   
     
-<div class="pagination">
-  <div class="pagination__title">
-    <span class="pagination__title-h">Read other posts</span>
-    <hr />
-  </div>
-  <div class="pagination__buttons">
-    
-    
-    
-      <a href="http://localhost:1313/blog/posts/test-post/" class="button inline next">
-         [<span class="button__text">Test Post</span>] &gt;
-      </a>
-    
-  </div>
-</div>
-
 
   
 
