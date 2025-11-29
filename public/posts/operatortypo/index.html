@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="http://localhost:1313/blog/css/header.min.75c7eb0e2872d95ff48109c6647d0223a38db52e2561dd87966eb5fc7c6bdac6.css">
 
   
-  <link rel="stylesheet" href="http://localhost:1313/blog/css/main.min.36833afd348409fc6c3d09d0897c5833d9d5bf1ff31f5e60ea3ee42ce2b1268c.css">
+  <link rel="stylesheet" href="http://localhost:1313/blog/css/main.min.824c3d24e681ea1216c286ec4a9d7b6510255fa3728f099f81a22a7678bb6ed1.css">
 
   
   <link rel="stylesheet" href="http://localhost:1313/blog/css/menu.min.3c17467ebeb3d38663dce68f71f519901124fa5cbb4519b2fb0667a21e9aca39.css">
@@ -82,9 +82,7 @@
 <meta property="og:url" content="http://localhost:1313/blog/posts/operatortypo/" />
 <meta property="og:site_name" content="Terminal" />
 
-  
-  
-  <meta property="og:image" content="http://localhost:1313/blog/">
+  <meta property="og:image" content="http://localhost:1313/blog/og-image.png">
 
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="627">
@@ -197,9 +195,8 @@
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="c1">// ...
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">_orders_by_id</span><span class="p">[</span><span class="n">order_id</span><span class="p">];</span> 
 </span></span><span class="line"><span class="cl"><span class="n">orders</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">it</span><span class="p">);</span> 
-</span></span><span class="line"><span class="cl"><span class="c1">// Note: This is a &#34;Naive Vector&#34; implementation for a future project
-</span></span></span><span class="line"><span class="cl"><span class="c1">//       comparing orderbook architectures 
-</span></span></span><span class="line"><span class="cl"><span class="c1">//       Iterator invalidation is part of that analysis! 
+</span></span><span class="line"><span class="cl"><span class="c1">// Note: This is a &#39;Naive Vector&#39; implementation for a future project comparing orderbook architectures.
+</span></span></span><span class="line"><span class="cl"><span class="c1">//       Iterator invalidation forms part of that analysis!
 </span></span></span><span class="line"><span class="cl"><span class="c1">// ...
 </span></span></span></code></pre></div><p>But, the <code>Order</code> was never removed. In fact, regardless of which <code>order_id</code> I was attempting to remove, it would remove <strong>only</strong> the last order. After stepping through the function in <code>gdb</code> more times than I care to admit, I checked my implementation of the <code>Order</code> class - and found this abomination.</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Order</span> <span class="p">{</span>
@@ -214,7 +211,14 @@
 <p><code>erase</code> works by shifting down all elements after the deletion point, filling the gap left by the deleted item, before shrinking the vector by one. Because I had specified the copy assignment operator, the move assignment operator was thus deleted, forcing the vector to fall back on my broken copy assignment. The shifting became a no-op, and the poor order at the end of the list was truncated. The erroneous <code>bool</code> return value of my copy assignment was silently discarded, and the compiler moved on as if everything were normal. <a href="https://godbolt.org/z/367hacb1d">See an example of my bug on Compiler Explorer</a></p>
 <p>After discovering this bug, I did what any sane C++ developer would do and direct my rage towards the compiler instead of accepting I was in the wrong. Why was I allowed to do this in the first place? Why did the code even compile with a clearly incorrect copy assignment operator? <strong>Why does C++ not enforce the return type for operators?</strong> In exploring these questions, I discovered exactly why this apparent anti-pattern actually allows for <strong>incredibly smart optimisation techniques</strong>, and enforcing operator return types would be a <strong>terrible idea</strong>.</p>
 <h3 id="operators-are-pure-syntactic-sugar-for-function-calls">Operators are pure syntactic sugar for function calls<a href="#operators-are-pure-syntactic-sugar-for-function-calls" class="hanchor" ariaLabel="Anchor">#</a> </h3>
-<p>Unlike many other languages, symbols such as <code>+</code>, <code>-</code>, <code>=</code>, <code>==</code> in C++ are <strong>aliases to function calls</strong>; <code>a + b</code> compiles to an AST node resembling <code>a.operator+(b)</code>. Operators play by the rules of function signatures just like any other function. A function signature is defined by: the name of the function, the number of parameters, and type of parameters. Notably, the <strong>function&rsquo;s return type does not make this list</strong> (which is why you cannot overload a normal function on return type alone). So the compiler can enforce <code>operator=</code> to take exactly one parameter of type <code>const T&amp;</code>, but it does not enforce the return type. This anarchy actually allows us to build things that are impossible in safer languages.</p>
+<p>Unlike many other languages, symbols such as <code>+</code>, <code>-</code>, <code>=</code>, <code>==</code> in C++ are <strong>aliases to function calls</strong>; <code>a + b</code> compiles to an AST node resembling <code>a.operator+(b)</code>. Operators play by the rules of function signatures just like any other function. A function signature is defined by: the name of the function, the number of parameters, and type of parameters. <span class="sidenote-wrapper">
+    <label for="sn-0" class="margin-toggle sidenote-number"></label>
+    <input type="checkbox" id="sn-0" class="margin-toggle"/>
+    <span class="sidenote">
+        <em>For member functions, <code>const</code> and <code>volatile</code> qualifers also form the signature, as well as ref-qualifiers <code>&amp;</code> and <code>&amp;&amp;</code>. <code>noexcept</code>, <code>virtual</code>, and <code>static</code> are all excluded.</em>
+    </span>
+</span>
+  Notably, the <strong>function&rsquo;s return type does not make this list</strong> (which is why you cannot overload a normal function on return type alone). So the compiler can enforce <code>operator=</code> to take exactly one parameter of type <code>const T&amp;</code>, but it does not enforce the return type. This anarchy actually allows us to build things that are impossible in safer languages.</p>
 <h3 id="use-cases-for-wrong-operator-overloads">Use cases for &ldquo;wrong&rdquo; operator overloads<a href="#use-cases-for-wrong-operator-overloads" class="hanchor" ariaLabel="Anchor">#</a> </h3>
 <h4 id="expression-templates">Expression templates<a href="#expression-templates" class="hanchor" ariaLabel="Anchor">#</a> </h4>
 <p>If C++ decided to enforce strict return types, making <code>operator=</code> always return <code>T&amp;</code> and <code>operator+</code> always return <code>T</code>, it would destroy one of the most powerful optimisation techniques in math - and my latest obsession: <strong>expression templates</strong>.</p>
@@ -243,7 +247,7 @@
 <h5 id="loop-fusion-and-heap-efficiency">Loop Fusion and Heap Efficiency<a href="#loop-fusion-and-heap-efficiency" class="hanchor" ariaLabel="Anchor">#</a> </h5>
 <p>As well as avoiding an allocation, the <code>Sum</code> expression template allows the compiler to generate SIMD instructions, and improves heap efficiency. Take the simple example of a <code>Matrix</code> addition with no expression template:</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">Matrix</span> <span class="n">result</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span><span class="p">;</span>
-</span></span></code></pre></div><p>The CPU is condemned pass over the same memory twice.</p>
+</span></span></code></pre></div><p>The CPU is condemned to pass over the same memory twice.</p>
 <ul>
 <li>Pass 1: Load <code>a[i]</code>, load <code>b[i]</code>, add, write temporary result.</li>
 <li>Pass 2: Read temporary result, load <code>c[i]</code>, add, write to <code>result</code>.</li>

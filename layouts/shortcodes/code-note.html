@@ -1,0 +1,10 @@
+<div class="code-note-grid">
+    <div class="code-block">
+        {{ .Inner | markdownify }}
+    </div>
+    <div class="note-column">
+        <span class="sidenote">
+            {{ .Get 0 | markdownify }}
+        </span>
+    </div>
+</div>

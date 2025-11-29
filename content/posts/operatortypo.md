@@ -2,7 +2,6 @@
 title = "Do as I meant, not as I wrote"
 date = "2025-11-23T19:01:37Z"
 #dateFormat = "2006-01-02" # This value can be configured for per-post date formatting
-cover = ""
 tags = ["C++"]
 keywords = ["", ""]
 description = "How a single-character typo corrupted a trading engine with no compiler errors... "
@@ -17,9 +16,8 @@ I recently experienced a bug so nasty it made me reconsider my proclaimed "passi
 // ...
 auto it = _orders_by_id[order_id]; 
 orders.erase(it); 
-// Note: This is a "Naive Vector" implementation for a future project
-//       comparing orderbook architectures 
-//       Iterator invalidation is part of that analysis! 
+// Note: This is a 'Naive Vector' implementation for a future project comparing orderbook architectures.
+//       Iterator invalidation forms part of that analysis!
 // ...
 ```
 But, the `Order` was never removed. In fact, regardless of which `order_id` I was attempting to remove, it would remove **only** the last order. After stepping through the function in `gdb` more times than I care to admit, I checked my implementation of the `Order` class - and found this abomination.
@@ -40,7 +38,7 @@ At a glance, it appears to be a normal equality comparison operator - but closer
 After discovering this bug, I did what any sane C++ developer would do and direct my rage towards the compiler instead of accepting I was in the wrong. Why was I allowed to do this in the first place? Why did the code even compile with a clearly incorrect copy assignment operator? **Why does C++ not enforce the return type for operators?** In exploring these questions, I discovered exactly why this apparent anti-pattern actually allows for **incredibly smart optimisation techniques**, and enforcing operator return types would be a **terrible idea**. 
 
 ### Operators are pure syntactic sugar for function calls
-Unlike many other languages, symbols such as `+`, `-`, `=`, `==` in C++ are **aliases to function calls**; `a + b` compiles to an AST node resembling `a.operator+(b)`. Operators play by the rules of function signatures just like any other function. A function signature is defined by: the name of the function, the number of parameters, and type of parameters. Notably, the **function's return type does not make this list** (which is why you cannot overload a normal function on return type alone). So the compiler can enforce `operator=` to take exactly one parameter of type `const T&`, but it does not enforce the return type. This anarchy actually allows us to build things that are impossible in safer languages.
+Unlike many other languages, symbols such as `+`, `-`, `=`, `==` in C++ are **aliases to function calls**; `a + b` compiles to an AST node resembling `a.operator+(b)`. Operators play by the rules of function signatures just like any other function. A function signature is defined by: the name of the function, the number of parameters, and type of parameters. {{< sidenote >}} *For member functions, `const` and `volatile` qualifers also form the signature, as well as ref-qualifiers `&` and `&&`. `noexcept`, `virtual`, and `static` are all excluded.* {{< /sidenote >}}  Notably, the **function's return type does not make this list** (which is why you cannot overload a normal function on return type alone). So the compiler can enforce `operator=` to take exactly one parameter of type `const T&`, but it does not enforce the return type. This anarchy actually allows us to build things that are impossible in safer languages.
 
 ### Use cases for "wrong" operator overloads
 #### Expression templates
@@ -78,7 +76,7 @@ As well as avoiding an allocation, the `Sum` expression template allows the comp
 ```cpp
 Matrix result = a + b + c;
 ```
-The CPU is condemned pass over the same memory twice.
+The CPU is condemned to pass over the same memory twice.
 - Pass 1: Load `a[i]`, load `b[i]`, add, write temporary result.
 - Pass 2: Read temporary result, load `c[i]`, add, write to `result`.
 

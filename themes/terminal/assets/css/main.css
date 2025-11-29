@@ -518,3 +518,61 @@ iframe[src*="youtube.com"] {
     display: initial;
   }
 }
+/* Numbering */
+.sidenote-number { counter-increment: sidenote-counter; }
+.sidenote-number:after { 
+    content: counter(sidenote-counter); 
+    font-size: 0.7rem; 
+    vertical-align: super;
+    color: #00ff00; /* Hacker green or your theme accent */
+    cursor: pointer;
+}
+
+/* Logic */
+.sidenote {
+    float: right;
+    clear: right;
+    margin-right: -40%; /* Push into right margin */
+    width: 35%;         /* Width of the note */
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    opacity: 0.8; 
+}
+
+/* Hide checkbox used for mobile toggle */
+.margin-toggle { display: none; }
+
+/* Mobile View (Collapse to inline) */
+@media (max-width: 1200px) {
+    .sidenote {
+        display: none; /* Hidden by default on mobile */
+        float: none;
+        margin: 1rem 0;
+        width: 100%;
+        padding: 10px;
+        border-left: 2px solid #00ff00;
+    }
+    .margin-toggle:checked + .sidenote {
+        display: block; /* Show when number is clicked */
+    }
+}
+.code-note-grid {
+    display: grid;
+    grid-template-columns: 1fr 35%; /* Code takes main space, Note takes margin */
+    gap: 20px;
+    align-items: start; /* Align tops */
+    margin-bottom: 1.5rem;
+}
+
+/* Mobile fallback */
+@media (max-width: 1200px) {
+    .code-note-grid {
+        grid-template-columns: 1fr; /* Stack them */
+    }
+    .note-column {
+        order: -1; /* Put note above code on mobile? Or 1 for below */
+        margin-bottom: 0.5rem;
+    }
+}
