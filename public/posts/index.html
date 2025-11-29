@@ -180,13 +180,15 @@
         <div class="post-content">
           
             <h3 id="the-worlds-worst-copy-assignment">The world&rsquo;s worst copy assignment</h3>
-<p>I recently experienced a bug so nasty it made me reconsider my so called &ldquo;passion&rdquo; for C++. Working on an implementation of a limit orderbook, I naturally implemented a <code>cancel</code> method, simply removing an <code>Order</code> object from a <code>std::vector</code> using an iterator.</p>
+<p>I recently experienced a bug so nasty it made me reconsider my proclaimed &ldquo;passion&rdquo; for C++. Working on an implementation of a limit orderbook, I had implemented a <code>cancel</code> method, simply removing an <code>Order</code> object from a <code>std::vector</code> using <code>erase</code>.</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="c1">// ...
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">_orders_by_id</span><span class="p">[</span><span class="n">order_id</span><span class="p">];</span> 
-</span></span><span class="line"><span class="cl"><span class="n">orders</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">it</span><span class="p">);</span> <span class="c1">// Note: In a real engine, storing vector iterators is unsafe due to invalidation
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                  <span class="c1">//       on erase. Simplified for this example
+</span></span><span class="line"><span class="cl"><span class="n">orders</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">it</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl"><span class="c1">// Note: This is a &#34;Naive Vector&#34; implementation for a future project
+</span></span></span><span class="line"><span class="cl"><span class="c1">//       comparing orderbook architectures 
+</span></span></span><span class="line"><span class="cl"><span class="c1">//       Iterator invalidation is part of that analysis! 
 </span></span></span><span class="line"><span class="cl"><span class="c1">// ...
-</span></span></span></code></pre></div><p>But, the <code>Order</code> was never removed. In fact, regardless of which <code>order_id</code> I was attempting to remove, it would remove <strong>only</strong> the last order. After running through the function in <code>gdb</code> more times than I care to admit, I checked my implementation of the <code>Order</code> class - and found this abomination.</p>
+</span></span></span></code></pre></div><p>But, the <code>Order</code> was never removed. In fact, regardless of which <code>order_id</code> I was attempting to remove, it would remove <strong>only</strong> the last order. After stepping through the function in <code>gdb</code> more times than I care to admit, I checked my implementation of the <code>Order</code> class - and found this abomination.</p>
           
         </div>
 
