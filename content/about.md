@@ -1,11 +1,10 @@
 +++
-date = '2025-11-29T12:04:59Z'
 title = 'About'
 +++
 
 I am an undergraduate Economics student currently mutating into a Quantitative Developer/Systems Engineer.
 
-This blog documents any spoils of knowledge I've received from compiler warfare, ... , and ...
+This blog documents any spoils of knowledge I've received from compiler warfare, undefined-behavior forensics, and race-condition roulette
 
 Passionate about type safety and cryptic crossword
 
