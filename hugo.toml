@@ -1,4 +1,4 @@
-baseurl = "/blog"
+baseurl = "https://273dan.github.io/blog/"
 languageCode = "en-gb"
 # Add it only if you keep the theme in the `themes` directory.
 # Remove it if you use the theme as a remote Hugo Module.
@@ -95,13 +95,13 @@ pagination.pagerSize = 5
 
       [languages.en.params.logo]
         logoText = "Dan Kirby"
-        logoHomeLink = "/"
+        logoHomeLink = "/blog"
 
-      [languages.en.menu]
-        [[languages.en.menu.main]]
-          identifier = "about"
-          name = "About"
-          url = "/about"
+      # [languages.en.menu]
+      #   [[languages.en.menu.main]]
+      #     identifier = "about"
+      #     name = "About"
+      #     url = "/about"
 
 # [module]
 #   # In case you would like to make changes to the theme and keep it locally in you repository,
