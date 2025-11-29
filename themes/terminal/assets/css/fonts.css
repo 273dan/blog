@@ -1,0 +1,29 @@
+/* Fantasque Sans Mono */
+@font-face {
+  font-family: 'Fantasque Sans Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/FantasqueSansMono-Regular.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Fantasque Sans Mono';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/FantasqueSansMono-Italic.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Fantasque Sans Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/FantasqueSansMono-Bold.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Fantasque Sans Mono';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/FantasqueSansMono-BoldItalic.woff2") format('woff2');
+}
